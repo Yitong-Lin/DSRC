@@ -2,12 +2,10 @@
 
 import argparse
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"  # 使得程序只看到2号GPU
 import time
 from tqdm import tqdm
 
 import torch
-import open3d as o3d
 from torch.utils.data import DataLoader
 
 import opencood.hypes_yaml.yaml_utils as yaml_utils
@@ -94,6 +92,7 @@ def main():
                    0.7: {'tp': [], 'fp': [], 'gt': 0, 'score': []}}
 
     if opt.show_sequence:
+        import open3d as o3d
         vis = o3d.visualization.Visualizer()
         vis.create_window()
 

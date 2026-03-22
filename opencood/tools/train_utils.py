@@ -9,7 +9,36 @@ from datetime import datetime
 
 import torch
 import torch.optim as optim
-import timm
+import math
+
+
+class CosineLRScheduler:
+    """Cosine LR scheduler with warmup, replacing timm dependency."""
+    def __init__(self, optimizer, t_initial, lr_min=0., warmup_lr_init=0.,
+                 warmup_t=0, cycle_limit=1, t_in_epochs=False):
+        self.optimizer = optimizer
+        self.t_initial = t_initial
+        self.lr_min = lr_min
+        self.warmup_lr_init = warmup_lr_init
+        self.warmup_t = warmup_t
+        self.base_lrs = [pg['lr'] for pg in optimizer.param_groups]
+
+    def step_update(self, num_updates):
+        if num_updates < self.warmup_t:
+            if self.warmup_t > 0:
+                scale = num_updates / self.warmup_t
+                lrs = [self.warmup_lr_init + (base - self.warmup_lr_init) * scale
+                       for base in self.base_lrs]
+            else:
+                lrs = self.base_lrs
+        else:
+            t = num_updates - self.warmup_t
+            T = self.t_initial - self.warmup_t
+            progress = t / max(T, 1)
+            lrs = [self.lr_min + 0.5 * (base - self.lr_min) * (1 + math.cos(math.pi * progress))
+                   for base in self.base_lrs]
+        for pg, lr in zip(self.optimizer.param_groups, lrs):
+            pg['lr'] = lr
 
 def load_saved_model(saved_path, model, epoch=None):
     """
@@ -260,8 +289,6 @@ def setup_lr_schedular(hypes, optimizer, n_iter_per_epoch):
 
     elif lr_schedule_config['core_method'] == 'cosineannealwarm':
         print('cosine annealing is chosen for lr scheduler')
-        from timm.scheduler.cosine_lr import CosineLRScheduler
-
         num_steps = lr_schedule_config['epoches'] * n_iter_per_epoch
         warmup_lr = lr_schedule_config['warmup_lr']
         warmup_steps = lr_schedule_config['warmup_epoches'] * n_iter_per_epoch

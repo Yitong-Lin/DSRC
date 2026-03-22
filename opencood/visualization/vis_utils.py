@@ -4,9 +4,15 @@
 
 import time
 
-import cv2
 import numpy as np
-import open3d as o3d
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+try:
+    import open3d as o3d
+except ImportError:
+    o3d = None
 import matplotlib
 import matplotlib.pyplot as plt
 

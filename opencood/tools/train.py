@@ -71,7 +71,7 @@ def main():
                                 collate_fn=opencood_train_dataset.collate_batch_train,
                                 shuffle=False,
                                 pin_memory=False,
-                                drop_last=True)
+                                drop_last=False)
 
     print('---------------Creating Model------------------')
     model = train_utils.create_model(hypes)
@@ -210,7 +210,7 @@ def main():
                     final_loss = criterion(ouput_dict,
                                            batch_data['ego']['label_dict'])
                     valid_ave_loss.append(final_loss.item())
-            valid_ave_loss = statistics.mean(valid_ave_loss)
+            valid_ave_loss = statistics.mean(valid_ave_loss) if valid_ave_loss else 0.0
             print('At epoch %d, the validation loss is %f' % (epoch,
                                                               valid_ave_loss))
             writer.add_scalar('Validate_Loss', valid_ave_loss, epoch)
